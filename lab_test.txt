@@ -1,0 +1,396 @@
+1 .create a laravel project using laravel 11 installation
+2. run composer install command
+
+
+#############for objective2#######
+
+go to the terminal and create a model 
+--php artisan make:model Employee -m
+now go to the migration and write the following 
+ $table->id();
+            $table->string("name",length:255)->nullable(false);
+            $table->string("designation",length:100)->nullable(false);
+            $table->date("joining_date")->nullable(false);
+            $table->float("salary")->nullable(false);
+            $table->string("email")->nullable(true);
+            $table->string("mobile_no")->nullable(false);
+            $table->text("address");
+            $table->timestamps();
+ 
+
+then run php artisan migrate (and check on database)
+
+then create a seeder by using php artisan make:seeder EmployeeSeeder 
+and add the following code 
+use App\Models\Employee;
+
+use Illuminate\Database\Console\Seeds\WithoutModelEvents;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Database\Seeder;
+use Illuminate\Support\str;
+use Faker\Factory as Faker;
+
+class EmployeeSeeder extends Seeder
+{
+    /**
+     * Run the database seeds.
+     */
+    public function run(): void
+    {
+        Employee::factory()->count(200)->create();
+    }
+}
+
+
+and create a factory 
+php artisan make:factory EmployeeFactory
+
+
+use Illuminate\Database\Eloquent\Factories\Factory;
+use Illuminate\Support\Str;
+
+'name' => $this->faker->name(),
+            'designation' => $this->faker->jobTitle(),
+            'joining_date' => $this->faker->date(),
+            'salary' => $this->faker->randomFloat(2, 3000, 10000),
+            'email' => $this->faker->unique()->safeEmail(),
+            'mobile_no' => $this->faker->phoneNumber(),
+            'address' => $this->faker->address(),
+
+
+after that run the seeder 
+--php artisan db:seed EmployeeSeeder
+
+
+
+
+
+for objective 3
+at first go to the routes
+> make a controller by using --php artisan make:controller EmployeeController (app/http/)
+
+then write a function for the controller 
+ public function getAll()
+    {
+        $employees = Employee::all();
+        return $employees;
+    }
+
+and go to the routes 
+and wite a route as >
+Route::get('/view-all', [EmployeeController::class, 'getAll']);
+
+server is now running and refresh the browser for showing the data and select pretty print .
+
+done for the data reading from the database .
+
+# create a view
+go to the resources then view 
+> create a php file  byusing viewall.blade.php
+then go to the bootstrap and copy and paste starter template and rename the title 
+
+then go to the controller and rewrite return view("viewall");
+
+and now create a table .
+go to the bootstrap and select table the copy inside the div with strip and container class and use the following code to create our
+determined table 
+ <div class="container pt -5">
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th scope="col">#</th>
+                    <th scope="col">Name</th>
+                    <th scope="col">Designation</th>
+                    <th scope="col">Join date</th>
+                    <th scope="col">Salary</th>
+                    <th scope="col">Email</th>
+                    <th scope="col">Mobile no</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <th scope="row">1</th>
+                    <td>Mark</td>
+                    <td>Otto</td>
+                    <td>@mdo</td>
+                    <td>Mark</td>
+                    <td>Otto</td>
+                    <td>@mdo</td>
+                </tr>
+                 
+            </tbody>
+        </table>
+    </div>
+
+and now go to the controller and use the data collected from database
+return view("viewall",['employees'=>$employees]);
+
+and the write the following code for view controll 
+ <div class="container pt -5">
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th scope="col">#</th>
+                    <th scope="col">Name</th>
+                    <th scope="col">Designation</th>
+                    <th scope="col">Join date</th>
+                    <th scope="col">Salary</th>
+                    <th scope="col">Email</th>
+                    <th scope="col">Mobile no</th>
+                    <th scope="col">Address</th>
+
+                </tr>
+            </thead>
+            <tbody>
+                @foreach ($employees as $employee)
+                <tr>
+                    <th scope="row">{{$employee->id}}</th>
+                    <td>{{$employee->name}}</td>
+                    <td>{{$employee->designation}}</td>
+                    <td>{{$employee->joining_date}}</td>
+                    <td>{{$employee->salary}}</td>
+                    <td>{{$employee->email}}</td>
+                    <td>{{$employee->mobile_no}}</td>
+                    <td>{{$employee->address}}</td>
+                </tr>
+                @endforeach
+            </tbody>
+        </table>
+    </div>
+
+
+# now lets go to delete operation
+at first add a delete button 
+code --<td><a class = "btn btn-danger" href="/delete/id">Delete</a></td>
+header file --<th scope="col">Action</th>
+
+then go to the web app and create a route ---Route::get('/delete{id}', [EmployeeController::class, 'deleteById']);
+and the go to the controller and write a function named deleteById
+
+public function deleteById($id)
+    {
+        $employee = Employee::find($id);
+        if($employee)
+        {
+            $employee->delete();
+        }
+        return redirect("/view-all");
+    }
+now update the link 
+
+<td><a class = "btn btn-danger" href="/delete/{{$employee->id}}" onclick="return confirm('Are you sure you want to delete this record?');">Delete</a></td>
+                
+
+# now insert method 
+at first go to the route and add a route 
+
+Route::get('/create', [EmployeeController::class, 'create']);
+then go to controller and write 
+ public function create()
+    {
+        return view('createpage');
+    }
+
+after that create a view createpage.blade.php and write the following
+<div class="container pt-5 pb-5">
+        <form action="/create" method="post">
+            @csrf
+            <div class="mb-3">
+                <label for="exampleInputEmail1" class="form-label">Name</label>
+                <input name="name" type="text" class="form-control" id="exampleInputEmail1" aria-describedby="emailHelp">
+                 
+            </div>
+            <div class="mb-3">
+                <label for="exampleInputPassword1" class="form-label">Designation</label>
+                <input name="designation" type="text" class="form-control" id="exampleInputPassword1">
+            </div>
+            <div class="mb-3">
+                <label for="exampleInputPassword1" class="form-label">Join date</label>
+                <input name="joining_date" type="date" class="form-control" id="exampleInputPassword1">
+            </div>
+            <div class="mb-3">
+                <label for="exampleInputPassword1" class="form-label">Salary</label>
+                <input name="salary" type="number" class="form-control" id="exampleInputPassword1">
+            </div>
+            <div class="mb-3">
+                <label for="exampleInputPassword1" class="form-label">Email</label>
+                <input name="email" type="email" class="form-control" id="exampleInputPassword1">
+            </div>
+            <div class="mb-3">
+                <label for="exampleInputPassword1" class="form-label">Phone</label>
+                <input name="mobile_no" type="phone" class="form-control" id="exampleInputPassword1">
+            </div>
+            <div class="mb-3">
+                <label for="exampleInputPassword1" class="form-label">Address</label>
+                <input name="address" type="text" class="form-control" id="exampleInputPassword1">
+            </div>
+             
+
+afterthat go to the route and create route for post 
+----Route::post('/create', [EmployeeController::class, 'createEmployee']);
+
+and then go to the controller and write createEmployee function
+ public function createEmployee(Request $req)
+    {
+        $employee = new Employee();
+        $employee->name = $req->name;
+        $employee->designation = $req->designation;
+        $employee->joining_date = $req->joining_date;
+        $employee->salary = $req->salary;
+        $employee->email = $req->email;
+        $employee->mobile_no = $req->mobile_no;
+        $employee->address = $req->address;
+        $employee->save();
+        return redirect("/view-all");
+    }
+
+thats all and run the code 
+
+##################for update ############
+create a view updatepage.blade.php and copy and paste of the createpage content 
+
+go to the route and add ---Route::get('/update/{id}',[EmployeeController::class,'updateview']);
+then go the the controller and write the following function 
+
+public function updateview($id)
+   {
+      $employee = Employee::find($id);
+      return  view("updatepage",['employee'=>$employee]);
+   }
+
+and now change update view by value value="{{$employee->name}}"
+
+now change the action to update and put a line of code 
+--@csrf
+  <input type="hidden" name="id" value="{{$employee->id}}">
+
+now create another route --
+Route::post('/update',[EmployeeController::class,'update']);
+and now go to the controller and write the follwing
+
+public function update(Request $req)
+    {
+        $employee = Employee::find($req->id);
+
+        $employee->name = $req->name;
+        $employee->designation = $req->designation;
+        $employee->joining_date = $req->joining_date;
+        $employee->salary = $req->salary;
+        $employee->email = $req->email;
+        $employee->mobile_no = $req->mobile_no;
+        $employee->address = $req->address;
+        $employee->save();
+
+        return redirect("/view-all");
+    }
+
+thats it for update ..
+
+##############search################
+
+create a view page search.blade.php and add a route
+
+for search.blade.php the following code is written
+<!doctype html>
+<html lang="en">
+
+<head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+
+    <title>Search Result</title>
+</head>
+
+<body>
+
+    <div class="container pt-5">
+        <div class="row">
+            <div class="col col-md-4"><a class="btn btn-success" href="/create">Add New</a></div>
+            <div class="col col-md-8">
+                <form class="form-inline" method="post" action="/search">
+                    @csrf
+                    <div class="form-group mx-sm-3 mb-2">
+                        <input type="text" name="text" class="form-control" id="inputPassword2" placeholder="Text to search">
+                        <button type="submit" class="btn btn-primary mb-2">Search</button>
+                    </div>
+
+                </form>
+            </div>
+        </div>
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th scope="col">#</th>
+                    <th scope="col">Name</th>
+                    <th scope="col">Designation</th>
+                    <th scope="col">Join Date</th>
+                    <th scope="col">Salary</th>
+                    <th scope="col">Email</th>
+                    <th scope="col">Mobile No</th>
+                    <th scope="col">Address</th>
+                    <th scope="col">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach ($employees as $employee)
+                <tr>
+                    <td>{{ $employee->id }}</td>
+                    <td>{{ $employee->name }}</td>
+                    <td>{{ $employee->designation }}</td>
+                    <td>{{ $employee->joining_date }}</td>
+                    <td>{{ $employee->salary }}</td>
+                    <td>{{ $employee->email }}</td>
+                    <td>{{ $employee->mobile_no }}</td>
+                    <td>{{ $employee->address }}</td>
+                    <td>
+                        <a class="btn btn-sm btn-danger" href="/delete/{{$employee->id}}" onclick="return confirm('Are you sure you want to delete this employee?');">Delete</a>
+                        <a class="btn btn-sm btn-warning" href="{{ route('employee.update', $employee->id) }}">Update</a>
+                    </td>
+                </tr>
+                @endforeach
+            </tbody>
+        </table>
+    </div>
+
+
+
+
+    <!-- Optional JavaScript; choose one of the two! -->
+
+    <!-- Option 1: Bootstrap Bundle with Popper -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
+
+    <!-- Option 2: Separate Popper and Bootstrap JS -->
+    <!--
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js" integrity="sha384-IQsoLXl5PILFhosVNubq5LC7Qb9DXgDA9i+tQ8Zj3iwWAwPtgFTxbJ8NT4GN1R8p" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.min.js" integrity="sha384-cVKIPhGWiC2Al4u+LWgxfKTRIcfu0JTxR+EQDz/bgldoEyl4H0zUF0QKbrJ0EcQF" crossorigin="anonymous"></script>
+    -->
+</body>
+
+</html>
+
+now add a route 
+Route::post("/search", [EmployeeController::class, 'search']);
+
+now go to the controller and add the follwoing code 
+ public function search(Request $req)
+    {
+        if($req->text=="") return redirect("/view-all");
+        $text = $req->text;
+        $employees = Employee::where("name",'LIKE','%'.$text.'%')->orWhere("designation", 'LIKE', '%'.$text.'%')->get();
+        return view('search', ['employees'=>$employees]);
+    }
+
+
+
+
+
+
+
+
+
+ 
